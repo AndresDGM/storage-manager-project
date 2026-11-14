@@ -41,6 +41,21 @@ export enum StorageErrorCode {
    * Representa cualquier otro error inesperado durante la interacción con la API de almacenamiento.
    */
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+
+  /**
+   * Indica que la API nativa de Cache Storage no está disponible o accesible.
+   */
+  CACHE_UNAVAILABLE = 'CACHE_UNAVAILABLE',
+
+  /**
+   * Indica que una operación nativa de Cache Storage falló.
+   */
+  CACHE_OPERATION_ERROR = 'CACHE_OPERATION_ERROR',
+
+  /**
+   * Indica que una operación de red requerida por `Cache.add` falló.
+   */
+  CACHE_NETWORK_ERROR = 'CACHE_NETWORK_ERROR',
 }
 
 /**
