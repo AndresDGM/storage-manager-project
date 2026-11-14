@@ -1,0 +1,14 @@
+export enum StorageErrorCode {
+  STORAGE_UNAVAILABLE = 'STORAGE_UNAVAILABLE',
+  QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
+  INVALID_JSON = 'INVALID_JSON',
+  SERIALIZATION_ERROR = 'SERIALIZATION_ERROR',
+  INVALID_KEY = 'INVALID_KEY',
+  KEY_NOT_FOUND = 'KEY_NOT_FOUND',
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+}
+
+export interface StorageEntry<T = unknown> {
+  key: string;
+  value: T;
+}
