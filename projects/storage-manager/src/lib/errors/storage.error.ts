@@ -5,7 +5,7 @@ import { StorageErrorCode } from '../models/storage-error-type.model';
  *
  * @description
  * Extiende la clase nativa `Error` agregando metadatos diagnósticos como el código de error
- * tipado (`StorageErrorCode`), la clave afectada y la causa original de la excepción.
+ * tipado (`StorageErrorCode`), la clave o caché afectada y la causa original de la excepción.
  */
 export class StorageError extends Error {
   /**
@@ -31,12 +31,7 @@ export class StorageError extends Error {
    * @param key Clave opcional asociada a la operación fallida.
    * @param originalError Excepción original opcional capturada internamente.
    */
-  constructor(
-    message: string,
-    code: StorageErrorCode,
-    key?: string,
-    originalError?: unknown
-  ) {
+  constructor(message: string, code: StorageErrorCode, key?: string, originalError?: unknown) {
     super(message);
     this.name = 'StorageError';
     this.code = code;

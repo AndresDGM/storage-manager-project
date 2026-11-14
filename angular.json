@@ -28,7 +28,19 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "tsConfig": "projects/storage-manager/tsconfig.spec.json"
+            "tsConfig": "projects/storage-manager/tsconfig.spec.json",
+            "coverage": false,
+            "coverageThresholds": {
+              "statements": 100,
+              "branches": 100,
+              "functions": 100,
+              "lines": 100
+            },
+            "coverageInclude": [
+              "projects/storage-manager/src/lib/services/**/*.ts",
+              "projects/storage-manager/src/lib/errors/**/*.ts"
+            ],
+            "coverageExclude": ["projects/storage-manager/src/**/*.spec.ts"]
           }
         }
       }
