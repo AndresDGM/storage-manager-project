@@ -6,7 +6,10 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test storage-manager --watch=false",
+    "test:coverage": "ng test storage-manager --watch=false --coverage",
+    "docs": "compodoc -p tsconfig.doc.json -d documentation --silent",
+    "docs:serve": "compodoc -s -d documentation"
   },
   "private": true,
   "packageManager": "npm@12.0.2",
@@ -24,6 +27,7 @@
     "@angular/build": "^22.2.7",
     "@angular/cli": "^22.2.7",
     "@angular/compiler-cli": "^22.2.0",
+    "@compodoc/compodoc": "^1.2.1",
     "@vitest/coverage-v8": "^5.1.0",
     "jsdom": "^30.0.0",
     "ng-packagr": "^22.2.0",
