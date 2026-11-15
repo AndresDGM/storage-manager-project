@@ -1,6 +1,28 @@
 {
   "name": "storage-manager",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "description": "Librería Angular reutilizable y tipada para la gestión segura de LocalStorage y Cache Storage en aplicaciones web.",
+  "keywords": [
+    "angular",
+    "localstorage",
+    "cache-storage",
+    "web-storage",
+    "storage-manager",
+    "typescript"
+  ],
+  "author": "Andrés David Guevara Martínez",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndresDGM/storage-manager-project.git"
+  },
+  "homepage": "https://github.com/AndresDGM/storage-manager-project#readme",
+  "bugs": {
+    "url": "https://github.com/AndresDGM/storage-manager-project/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "@angular/common": "^22.2.0",
     "@angular/core": "^22.2.0"
