@@ -9,6 +9,7 @@
     <nav class="nav-links" aria-label="Navegación principal">
       <a href="#local-storage" class="btn btn-ghost">LocalStorage</a>
       <a href="#cache-storage" class="btn btn-ghost">Cache Storage</a>
+      <a href="#juegos-cheapshark" class="btn btn-ghost">Juegos AAA</a>
       <a href="#api-publica" class="btn btn-ghost">API Pública</a>
     </nav>
 
@@ -32,6 +33,7 @@
         <div class="hero-actions">
           <a href="#local-storage" class="btn btn-cta">Explorar LocalStorage →</a>
           <a href="#cache-storage" class="btn btn-secondary">Ir a Cache Storage</a>
+          <a href="#juegos-cheapshark" class="btn btn-secondary">Catálogo CheapShark</a>
         </div>
       </div>
 
@@ -68,19 +70,25 @@
   <div class="divider-band divider-band--green" aria-hidden="true"></div>
 
   <div class="container">
-    <app-local-storage-demo (keysCountChange)="localStorageKeysCount.set($event)" />
+    <app-local-storage-demo (keysCountChange)="onLocalStorageCountChange($event)" />
   </div>
 
   <div class="divider-band divider-band--pink" aria-hidden="true"></div>
 
   <div class="container">
     <app-cache-storage-demo
-      (cachesCountChange)="cachesCount.set($event)"
+      (cachesCountChange)="onCachesCountChange($event)"
       (cacheAvailableChange)="cacheApiAvailable.set($event)"
     />
   </div>
 
   <div class="divider-band divider-band--yellow" aria-hidden="true"></div>
+
+  <div class="container">
+    <app-games-catalog-demo (storageSynced)="onGamesStorageSynced()" />
+  </div>
+
+  <div class="divider-band divider-band--green" aria-hidden="true"></div>
 
   <!-- Sección de referencia de API Pública y Códigos de Error -->
   <section id="api-publica" class="container api-section">
