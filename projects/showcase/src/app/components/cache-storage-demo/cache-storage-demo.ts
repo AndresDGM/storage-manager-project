@@ -54,7 +54,7 @@ export class CacheStorageDemoComponent implements OnInit {
   protected readonly responseBodyInput = signal(
     '{\n  "id": 1,\n  "producto": "Módulo Angular",\n  "disponible": true\n}',
   );
-  protected readonly fetchUrlInput = signal('/demo-data.json');
+  protected readonly fetchUrlInput = signal('demo-data.json');
 
   protected readonly cacheNames = signal<string[]>([]);
   protected readonly cacheEntries = signal<CacheEntrySnapshot[]>([]);
