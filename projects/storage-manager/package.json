@@ -1,5 +1,5 @@
 {
-  "name": "storage-manager",
+  "name": "@andresdgm/storage-manager",
   "version": "1.0.0",
   "description": "Librería Angular reutilizable y tipada para la gestión segura de LocalStorage y Cache Storage en aplicaciones web.",
   "keywords": [
