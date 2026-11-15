@@ -1,0 +1,198 @@
+<section id="juegos-cheapshark" class="section-block">
+  <div class="section-header">
+    <div class="section-title-row">
+      <span class="icon-box icon-box--yellow" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="6" width="20" height="12" rx="2" />
+          <line x1="6" y1="12" x2="10" y2="12" />
+          <line x1="8" y1="10" x2="8" y2="14" />
+          <circle cx="15" cy="11" r="1" />
+          <circle cx="17.5" cy="13" r="1" />
+        </svg>
+      </span>
+      <div>
+        <span class="pill-tag">CheapShark API · LocalStorage + Cache Storage</span>
+        <h2 class="heading-underline" style="--underline-color: var(--color-signal-blue)">
+          Catálogo de Juegos AAA
+        </h2>
+      </div>
+    </div>
+    <p class="section-subtitle">
+      Consulta títulos desde <code>apidocs.cheapshark.com</code> y guarda cada juego en
+      <span class="highlight-marker">LocalStorage + Cache Storage</span> para conservar sus datos e
+      imagen incluso al recargar.
+    </p>
+  </div>
+
+  <!-- Barra de consulta y filtros rápidos -->
+  <div class="card panel-stack">
+    <div class="search-row">
+      <input
+        type="text"
+        class="input-field"
+        name="cheapsharkQuery"
+        aria-label="Buscar juego en CheapShark"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        (keyup.enter)="fetchGames()"
+        placeholder="Buscar por título (ej. Cyberpunk, Witcher, Batman) o vacío para ofertas AAA..."
+      />
+      <button type="button" class="btn btn-cta" [disabled]="isLoading()" (click)="fetchGames()">
+        {{ isLoading() ? 'Consultando...' : 'Consultar juegos →' }}
+      </button>
+    </div>
+
+    <div class="presets-row" role="group" aria-label="Búsquedas sugeridas">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="fetchGames('')">
+        Ofertas AAA (Steam)
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="fetchGames('Cyberpunk')">
+        Cyberpunk
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="fetchGames('Witcher')">
+        Witcher
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="fetchGames('Batman')">
+        Batman
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="fetchGames('Elden Ring')">
+        Elden Ring
+      </button>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="card-mist error-banner" role="alert">
+        {{ errorMessage() }}
+      </div>
+    }
+  </div>
+
+  <!-- Resultados de la consulta -->
+  @if (catalogGames().length === 0) {
+    <div class="card empty-catalog">
+      Presiona <strong>Consultar juegos →</strong> o elige una búsqueda sugerida para listar juegos
+      desde CheapShark API.
+    </div>
+  } @else {
+    <div class="games-grid">
+      @for (game of catalogGames(); track game.gameID) {
+        <article class="card game-card">
+          <div class="game-thumb-wrap">
+            <img [src]="game.thumb" [alt]="game.title" class="game-thumb" loading="lazy" />
+          </div>
+
+          <div class="game-body">
+            <div class="game-tags">
+              <span class="pill-tag">ID {{ game.gameID }}</span>
+              @if (game.savingsPercent && game.savingsPercent > 0) {
+                <span class="pill-tag pill-tag--ok">-{{ game.savingsPercent }}%</span>
+              }
+              @if (game.metacriticScore) {
+                <span class="pill-tag">MC {{ game.metacriticScore }}</span>
+              }
+            </div>
+
+            <h3 class="game-title">{{ game.title }}</h3>
+
+            <div class="game-footer">
+              <div class="game-price">
+                <strong>USD ${{ game.price }}</strong>
+                @if (game.normalPrice && game.normalPrice !== game.price) {
+                  <span class="price-old">USD ${{ game.normalPrice }}</span>
+                }
+              </div>
+
+              @if (savedGameIds().has(game.gameID)) {
+                <span class="pill-tag pill-tag--selected">Guardado ✓</span>
+              } @else {
+                <button
+                  type="button"
+                  class="btn btn-cta btn-sm"
+                  [disabled]="savingGameId() === game.gameID"
+                  (click)="saveGame(game)"
+                >
+                  {{ savingGameId() === game.gameID ? 'Guardando...' : 'Guardar →' }}
+                </button>
+              }
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+  <!-- Juegos guardados persistentes -->
+  <div class="card panel-stack">
+    <div class="panel-heading">
+      <h3>Juegos guardados (LocalStorage + Cache Storage)</h3>
+      <span class="pill-tag">{{ savedGames().length }} guardados</span>
+    </div>
+
+    @if (savedGames().length === 0) {
+      <div class="card-mist empty-state">
+        Aún no has guardado ningún juego. Usa el botón <strong>Guardar →</strong> en cualquier
+        tarjeta para almacenarlo.
+      </div>
+    } @else {
+      <div class="games-grid">
+        @for (saved of savedGames(); track saved.gameID) {
+          <article class="card-mist game-card">
+            <div class="game-thumb-wrap">
+              <img
+                [src]="saved.cachedImageUrl || saved.thumb"
+                [alt]="saved.title"
+                class="game-thumb"
+              />
+            </div>
+
+            <div class="game-body">
+              <div class="game-tags">
+                <span class="pill-tag">juego_{{ saved.gameID }}</span>
+                <span
+                  class="pill-tag"
+                  [class.pill-tag--ok]="!!saved.cachedImageUrl"
+                >
+                  {{ saved.cachedImageUrl ? 'Imagen en Caché' : 'URL externa' }}
+                </span>
+              </div>
+
+              <h3 class="game-title">{{ saved.title }}</h3>
+
+              <div class="game-footer">
+                <strong>USD ${{ saved.price }}</strong>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  (click)="removeSavedGame(saved)"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  @if (logs().length > 0) {
+    <div class="card log-card">
+      <span class="field-label">Bitácora de operaciones (CheapShark)</span>
+      <ul class="log-list">
+        @for (entry of logs(); track entry.id) {
+          <li class="log-row">
+            <span class="log-time">{{ entry.timestamp }}</span>
+            <span
+              class="pill-tag"
+              [class.pill-tag--ok]="entry.status === 'ok'"
+              [class.pill-tag--error]="entry.status === 'error'"
+            >
+              {{ entry.operation }}
+            </span>
+            <span>{{ entry.message }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</section>

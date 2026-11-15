@@ -1,0 +1,206 @@
+<section id="local-storage" class="section-block">
+  <div class="section-header">
+    <div class="section-title-row">
+      <span class="icon-box icon-box--green" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+          <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+        </svg>
+      </span>
+      <div>
+        <span class="pill-tag">Paso 2 · Síncrono &amp; Tipado</span>
+        <h2 class="heading-underline" style="--underline-color: var(--color-pulse-green)">
+          LocalStorageService
+        </h2>
+      </div>
+    </div>
+    <p class="section-subtitle">
+      Almacenamiento, consulta, actualización controlada y eliminación de
+      <span class="highlight-marker">valores primitivos y objetos JSON</span>
+      con manejo seguro de excepciones.
+    </p>
+  </div>
+
+  <div class="grid-2">
+    <!-- Panel izquierdo: Escritura y actualización -->
+    <div class="card panel-stack">
+      <div class="panel-heading">
+        <h3>Escritura y actualización</h3>
+        <span class="pill-tag">{{ entries().length }} claves</span>
+      </div>
+
+      <div class="presets-row" role="group" aria-label="Ejemplos rápidos">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="applyPreset('user')">
+          Ejemplo Usuario JSON
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="applyPreset('prefs')">
+          Ejemplo Preferencias
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="applyPreset('counter')">
+          Ejemplo Número
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="applyPreset('token')">
+          Ejemplo Booleano
+        </button>
+      </div>
+
+      <div class="form-row">
+        <label class="field-group">
+          <span class="field-label">Clave (key)</span>
+          <input
+            type="text"
+            class="input-field"
+            name="lsKey"
+            [ngModel]="keyInput()"
+            (ngModelChange)="keyInput.set($event)"
+            placeholder="ej. usuario_actual"
+          />
+        </label>
+
+        <label class="field-group">
+          <span class="field-label">Tipo de dato</span>
+          <select
+            class="select-field"
+            name="lsType"
+            [ngModel]="valueType()"
+            (ngModelChange)="valueType.set($event)"
+          >
+            <option value="json">Objeto / Arreglo (JSON)</option>
+            <option value="string">Texto (string)</option>
+            <option value="number">Número (number)</option>
+            <option value="boolean">Booleano (boolean)</option>
+            <option value="null">Nulo (null)</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field-group">
+        <span class="field-label">Valor</span>
+        <textarea
+          class="textarea-field"
+          name="lsValue"
+          [ngModel]="rawValueInput()"
+          (ngModelChange)="rawValueInput.set($event)"
+          [disabled]="valueType() === 'null'"
+          placeholder='{"id": 1, "nombre": "Ana"}'
+        ></textarea>
+      </label>
+
+      <div class="actions-row">
+        <button type="button" class="btn btn-cta" (click)="saveItem()">
+          Guardar (setItem) →
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="updateExistingItem()">
+          Actualizar (updateItem)
+        </button>
+        <button type="button" class="btn btn-ghost" (click)="triggerInvalidKeyDemo()">
+          Probar error INVALID_KEY
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel derecho: Consulta e inspección -->
+    <div class="card panel-stack">
+      <div class="panel-heading">
+        <h3>Consulta y verificación</h3>
+        <button type="button" class="btn btn-danger btn-sm" (click)="clearAll()">
+          Vaciar todo (clear)
+        </button>
+      </div>
+
+      <div class="query-bar">
+        <input
+          type="text"
+          class="input-field"
+          name="lsQueryKey"
+          aria-label="Clave a consultar"
+          [ngModel]="queryKeyInput()"
+          (ngModelChange)="queryKeyInput.set($event)"
+          placeholder="Clave a consultar..."
+        />
+        <button type="button" class="btn btn-cta" (click)="queryItem()">
+          Consultar →
+        </button>
+      </div>
+
+      <div class="card-mist inspection-box">
+        <span class="field-label">Resultado de getItem&lt;T&gt;()</span>
+        <p class="inspection-meta">{{ inspectionMeta() }}</p>
+        <div class="console-panel">
+          <pre>{{ inspectionResult() ?? 'null' }}</pre>
+        </div>
+      </div>
+
+      <div class="entries-section">
+        <div class="panel-heading">
+          <span class="field-label">Claves registradas (keys)</span>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="refreshEntries()">
+            Refrescar
+          </button>
+        </div>
+
+        @if (entries().length === 0) {
+          <div class="card-mist empty-state">
+            No hay registros en LocalStorage. Usa el formulario para guardar un dato.
+          </div>
+        } @else {
+          <ul class="entries-list">
+            @for (item of entries(); track item.key) {
+              <li class="entry-item">
+                <div class="entry-info">
+                  <div class="entry-title-row">
+                    <strong>{{ item.key }}</strong>
+                    <span class="pill-tag">{{ item.detectedType }}</span>
+                  </div>
+                  <code class="entry-preview">{{ item.preview }}</code>
+                </div>
+                <div class="entry-actions">
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    (click)="selectEntryForEdit(item)"
+                  >
+                    Cargar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    (click)="removeKey(item.key)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Bitácora de operaciones LocalStorage -->
+  @if (logs().length > 0) {
+    <div class="card log-card">
+      <span class="field-label">Bitácora de operaciones (LocalStorageService)</span>
+      <ul class="log-list">
+        @for (entry of logs(); track entry.id) {
+          <li class="log-row">
+            <span class="log-time">{{ entry.timestamp }}</span>
+            <span
+              class="pill-tag"
+              [class.pill-tag--ok]="entry.status === 'ok'"
+              [class.pill-tag--error]="entry.status === 'error'"
+            >
+              {{ entry.operation }}
+            </span>
+            @if (entry.errorCode) {
+              <span class="pill-tag pill-tag--error">{{ entry.errorCode }}</span>
+            }
+            <span class="log-message">{{ entry.message }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</section>

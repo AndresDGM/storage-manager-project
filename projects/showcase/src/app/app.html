@@ -1,0 +1,171 @@
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a href="#" class="brand-mark">
+      <span class="brand-square" aria-hidden="true"></span>
+      <span>storage-manager</span>
+      <span class="pill-tag">v1.0.0</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Navegación principal">
+      <a href="#local-storage" class="btn btn-ghost">LocalStorage</a>
+      <a href="#cache-storage" class="btn btn-ghost">Cache Storage</a>
+      <a href="#juegos-cheapshark" class="btn btn-ghost">Juegos AAA</a>
+      <a href="#api-publica" class="btn btn-ghost">API Pública</a>
+    </nav>
+
+    <a href="#local-storage" class="btn btn-cta">Probar API →</a>
+  </div>
+</header>
+
+<main>
+  <!-- Hero editorial con confeti Bauhaus sobre lienzo Concrete -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="pill-tag pill-tag--selected">Showcase Angular · API Pública</span>
+        <h1 class="hero-title">Storage<br />Manager.</h1>
+        <p class="hero-dek">
+          Librería Angular tipada, modular y desacoplada para gestionar
+          <span class="highlight-marker">LocalStorage</span> y
+          <span class="highlight-marker">Cache Storage</span> sin interactuar directamente con las
+          API nativas del navegador.
+        </p>
+        <div class="hero-actions">
+          <a href="#local-storage" class="btn btn-cta">Explorar LocalStorage →</a>
+          <a href="#cache-storage" class="btn btn-secondary">Ir a Cache Storage</a>
+          <a href="#juegos-cheapshark" class="btn btn-secondary">Catálogo CheapShark</a>
+        </div>
+      </div>
+
+      <div class="hero-confetti" aria-hidden="true">
+        <div class="confetti-block confetti-blue"></div>
+        <div class="confetti-block confetti-green"></div>
+        <div class="confetti-block confetti-yellow"></div>
+        <div class="hero-kpi-card card">
+          <span class="field-label">Estado en vivo del navegador</span>
+          <div class="kpi-grid">
+            <div class="kpi-item">
+              <span class="kpi-value">{{ localStorageKeysCount() }}</span>
+              <span class="kpi-label">Claves en LocalStorage</span>
+            </div>
+            <div class="kpi-item">
+              <span class="kpi-value">{{ cachesCount() }}</span>
+              <span class="kpi-label">Cachés registradas</span>
+            </div>
+            <div class="kpi-item">
+              <span
+                class="pill-tag"
+                [class.pill-tag--ok]="cacheApiAvailable()"
+                [class.pill-tag--error]="!cacheApiAvailable()"
+              >
+                {{ cacheApiAvailable() ? 'Cache API activa' : 'Cache API no disponible' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider-band divider-band--green" aria-hidden="true"></div>
+
+  <div class="container">
+    <app-local-storage-demo (keysCountChange)="onLocalStorageCountChange($event)" />
+  </div>
+
+  <div class="divider-band divider-band--pink" aria-hidden="true"></div>
+
+  <div class="container">
+    <app-cache-storage-demo
+      (cachesCountChange)="onCachesCountChange($event)"
+      (cacheAvailableChange)="cacheApiAvailable.set($event)"
+    />
+  </div>
+
+  <div class="divider-band divider-band--yellow" aria-hidden="true"></div>
+
+  <div class="container">
+    <app-games-catalog-demo (storageSynced)="onGamesStorageSynced()" />
+  </div>
+
+  <div class="divider-band divider-band--green" aria-hidden="true"></div>
+
+  <!-- Sección de referencia de API Pública y Códigos de Error -->
+  <section id="api-publica" class="container api-section">
+    <div class="section-header">
+      <div class="section-title-row">
+        <span class="icon-box icon-box--blue" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+          </svg>
+        </span>
+        <div>
+          <span class="pill-tag">Paso 4 · public-api.ts</span>
+          <h2 class="heading-underline" style="--underline-color: var(--color-solar-yellow)">
+            Superficie de API Pública
+          </h2>
+        </div>
+      </div>
+      <p>
+        Esta aplicación consume exclusivamente los símbolos exportados desde
+        <code>'@andresdgm/storage-manager'</code>.
+      </p>
+    </div>
+
+    <div class="grid-3">
+      <article class="card api-card">
+        <span class="icon-box icon-box--green" aria-hidden="true">LS</span>
+        <h3>Servicios</h3>
+        <p>
+          <code>LocalStorageService</code> e <code>CacheStorageService</code> listos para inyección
+          con <code>providedIn: 'root'</code>.
+        </p>
+      </article>
+
+      <article class="card api-card">
+        <span class="icon-box icon-box--yellow" aria-hidden="true">IF</span>
+        <h3>Interfaces y Modelos</h3>
+        <p>
+          Contratos <code>IStorageService</code>, <code>ICacheStorageService</code>,
+          <code>StorageOperationResult&lt;T&gt;</code> y <code>StorageEntry&lt;T&gt;</code>.
+        </p>
+      </article>
+
+      <article class="card api-card">
+        <span class="icon-box icon-box--pink" aria-hidden="true">ER</span>
+        <h3>Excepciones Tipadas</h3>
+        <p>
+          Clase <code>StorageError</code> acompañada de la enumeración
+          <code>StorageErrorCode</code> para manejo determinista de fallos.
+        </p>
+      </article>
+    </div>
+
+    <div class="card error-catalog">
+      <h3>Catálogo de códigos <code>StorageErrorCode</code></h3>
+      <div class="error-grid">
+        @for (item of errorCodes; track item.code) {
+          <div class="card-mist error-item">
+            <span class="pill-tag">{{ item.code }}</span>
+            <p>{{ item.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-col">
+      <strong>storage-manager</strong>
+      <p>Unidad Central del Valle del Cauca (UCEVA) · Facultad de Ingeniería · Arquitectura de Software</p>
+    </div>
+    <div class="footer-col footer-commands">
+      <code>ng build storage-manager</code>
+      <code>npm run test:coverage</code>
+      <code>npm run docs</code>
+    </div>
+  </div>
+</footer>
