@@ -77,7 +77,7 @@ describe('CacheStorageDemoComponent', () => {
     expect(cacheMock.put).toHaveBeenCalled();
 
     await component.fetchAndAddResource();
-    expect(cacheMock.add).toHaveBeenCalledWith('/demo-data.json');
+    expect(cacheMock.add).toHaveBeenCalledWith('demo-data.json');
 
     await component.inspectRawMatch('/api/productos/1');
     await component.inspectJsonMatch('/api/productos/1');
