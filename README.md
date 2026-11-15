@@ -82,7 +82,7 @@ cd dist/storage-manager
 npm pack --dry-run
 ```
 
-3. Inicia sesión en NPM y publica el paquete (asegúrate de usar un nombre disponible o con scope en `projects/storage-manager/package.json` si el nombre sin scope ya existe en el registro):
+3. Inicia sesión en NPM y publica el paquete `@andresdgm/storage-manager`:
 
 ```bash
 npm login
@@ -105,7 +105,7 @@ Luego abre `http://localhost:4200/` en tu navegador (en `localhost` tanto `Local
 Si deseas consumir el paquete directamente desde el registro NPM en un proyecto externo o en el Showcase:
 
 ```bash
-npm install storage-manager
+npm install @andresdgm/storage-manager
 ```
 
 Consulta también la guía detallada de uso y API en [projects/storage-manager/README.md](projects/storage-manager/README.md).

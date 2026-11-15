@@ -1,4 +1,4 @@
-# storage-manager
+# @andresdgm/storage-manager
 
 Librería Angular reutilizable, tipada y desacoplada para facilitar la gestión segura de **LocalStorage** y **Cache Storage** en aplicaciones web sin necesidad de interactuar directamente con las API nativas del navegador.
 
@@ -18,7 +18,7 @@ Librería Angular reutilizable, tipada y desacoplada para facilitar la gestión 
 Instala la librería desde NPM en tu proyecto Angular (`^22.2.0`):
 
 ```bash
-npm install storage-manager
+npm install @andresdgm/storage-manager
 ```
 
 ---
@@ -29,7 +29,7 @@ Los servicios `LocalStorageService` y `CacheStorageService` están registrados c
 
 ```typescript
 import { Component, inject } from '@angular/core';
-import { LocalStorageService, CacheStorageService } from 'storage-manager';
+import { LocalStorageService, CacheStorageService } from '@andresdgm/storage-manager';
 
 @Component({
   selector: 'app-ejemplo',
@@ -49,7 +49,7 @@ export class EjemploComponent {
 
 ```typescript
 import { Component, inject } from '@angular/core';
-import { LocalStorageService, StorageError, StorageErrorCode } from 'storage-manager';
+import { LocalStorageService, StorageError, StorageErrorCode } from '@andresdgm/storage-manager';
 
 interface Usuario {
   id: number;
@@ -110,7 +110,7 @@ export class PerfilComponent {
 
 ```typescript
 import { Component, inject } from '@angular/core';
-import { CacheStorageService, StorageError } from 'storage-manager';
+import { CacheStorageService, StorageError } from '@andresdgm/storage-manager';
 
 interface Producto {
   id: number;
