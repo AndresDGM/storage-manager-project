@@ -18,6 +18,7 @@ describe('CacheStorageDemoComponent', () => {
   let originalCachesDescriptor: PropertyDescriptor | undefined;
 
   beforeEach(async () => {
+    window.sessionStorage.clear();
     cacheMock = {
       put: vi.fn().mockResolvedValue(undefined),
       add: vi.fn().mockResolvedValue(undefined),
@@ -36,7 +37,7 @@ describe('CacheStorageDemoComponent', () => {
     cacheStorageMock = {
       open: vi.fn().mockResolvedValue(cacheMock),
       has: vi.fn().mockResolvedValue(true),
-      keys: vi.fn().mockResolvedValue(['api-v1']),
+      keys: vi.fn().mockResolvedValue(['api-v1', 'media-v2']),
       delete: vi.fn().mockResolvedValue(true),
     };
 
@@ -52,6 +53,7 @@ describe('CacheStorageDemoComponent', () => {
   });
 
   afterEach(() => {
+    window.sessionStorage.clear();
     vi.restoreAllMocks();
     if (originalCachesDescriptor) {
       Object.defineProperty(window, 'caches', originalCachesDescriptor);
@@ -87,5 +89,25 @@ describe('CacheStorageDemoComponent', () => {
 
     await component.removeCache('api-v1');
     expect(cacheStorageMock.delete).toHaveBeenCalledWith('api-v1');
+  });
+
+  it('debe restaurar la caché activa y el último recurso consultado al recargar', async () => {
+    const firstFixture = TestBed.createComponent(CacheStorageDemoComponent);
+    const firstComponent = firstFixture.componentInstance;
+    await firstFixture.whenStable();
+
+    await firstComponent.selectCache('media-v2');
+    await firstComponent.inspectJsonMatch('/api/productos/1');
+    firstFixture.detectChanges();
+    firstFixture.destroy();
+
+    const reloadedFixture = TestBed.createComponent(CacheStorageDemoComponent);
+    reloadedFixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await reloadedFixture.whenStable();
+    reloadedFixture.detectChanges();
+
+    expect(reloadedFixture.nativeElement.textContent).toContain('Activa: media-v2');
+    expect(reloadedFixture.nativeElement.textContent).toContain('"ok": true');
   });
 });

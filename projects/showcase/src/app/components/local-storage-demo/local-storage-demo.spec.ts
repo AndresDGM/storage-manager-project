@@ -7,6 +7,7 @@ describe('LocalStorageDemoComponent', () => {
 
   beforeEach(async () => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
     await TestBed.configureTestingModule({
       imports: [LocalStorageDemoComponent],
     }).compileComponents();
@@ -15,6 +16,7 @@ describe('LocalStorageDemoComponent', () => {
 
   afterEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   it('debe guardar, consultar, actualizar y eliminar elementos en LocalStorage', async () => {
@@ -42,6 +44,23 @@ describe('LocalStorageDemoComponent', () => {
 
     component.clearAll();
     expect(service.keys()).toEqual([]);
+  });
+
+  it('debe restaurar las claves, formulario e inspección al recargar el componente', async () => {
+    const firstFixture = TestBed.createComponent(LocalStorageDemoComponent);
+    const firstComponent = firstFixture.componentInstance;
+    firstFixture.detectChanges();
+
+    firstComponent.applyPreset('counter');
+    firstComponent.saveItem();
+    firstFixture.detectChanges();
+    firstFixture.destroy();
+
+    const reloadedFixture = TestBed.createComponent(LocalStorageDemoComponent);
+    reloadedFixture.detectChanges();
+
+    expect(reloadedFixture.nativeElement.textContent).toContain('visitas_totales');
+    expect(reloadedFixture.nativeElement.textContent).toContain('hasKey("visitas_totales") = true');
   });
 
   it('debe registrar errores controlados cuando se dispara una clave inválida', () => {
