@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { LocalStorageService } from 'storage-manager';
+import { LocalStorageService } from '@andresdgm/storage-manager';
 import { GamesCatalogDemoComponent } from './games-catalog-demo';
 
 describe('GamesCatalogDemoComponent', () => {

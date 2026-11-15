@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { LocalStorageService } from 'storage-manager';
+import { LocalStorageService } from '@andresdgm/storage-manager';
 import { LocalStorageDemoComponent } from './local-storage-demo';
 
 describe('LocalStorageDemoComponent', () => {
