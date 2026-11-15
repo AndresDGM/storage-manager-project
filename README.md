@@ -1,45 +1,111 @@
 # Storage Manager Project
 
-Librería reutilizable en Angular orientada a facilitar la gestión del almacenamiento de información en aplicaciones web mediante los mecanismos **LocalStorage** y **Cache Storage** proporcionados por los navegadores.
+Librería reutilizable en Angular orientada a facilitar la gestión tipada, segura y modular del almacenamiento de información en aplicaciones web mediante **LocalStorage** y **Cache Storage**, acompañada de su aplicación independiente **Showcase**.
 
-Este proyecto fue generado con [Angular CLI](https://github.com/angular/angular-cli) versión 22.2.7.
+---
 
-## Estructura del espacio de trabajo
+## Estructura del repositorio
 
 - `projects/storage-manager`: Código fuente de la librería Angular (`storage-manager`).
+  - `src/public-api.ts`: Superficie de exportación pública exclusiva para consumidores externos.
+  - `src/lib/services/`: Servicios `LocalStorageService` y `CacheStorageService`.
+  - `src/lib/interfaces/`: Contratos `IStorageService`, `ICacheStorageService` y `StorageOperationResult`.
+  - `src/lib/models/`: Enumeración `StorageErrorCode` y modelo `StorageEntry`.
+  - `src/lib/errors/`: Clase de excepción personalizada `StorageError`.
+- `projects/showcase`: Aplicación Angular independiente que consume exclusivamente la API pública de `storage-manager` para demostrar todas las operaciones en tiempo real.
 
-## Compilación de la librería
+---
 
-Para compilar la librería, ejecuta:
+## Requisitos previos
 
-```bash
-ng build storage-manager
-```
+- **Node.js** `>= 22`
+- **npm** `>= 10`
+- **Angular CLI** `^22.2.7`
 
-Los artefactos compilados se almacenarán en el directorio `dist/storage-manager/`.
-
-## Ejecución de pruebas unitarias
-
-Para ejecutar las pruebas unitarias con [Vitest](https://vitest.dev/), utiliza el siguiente comando:
-
-```bash
-ng test
-```
-
-## Generación de código
-
-Angular CLI incluye herramientas para generar nuevos artefactos dentro de la librería:
+Instalación de dependencias del espacio de trabajo:
 
 ```bash
-ng generate service nombre-servicio --project=storage-manager
+npm install
 ```
 
-Para consultar la lista completa de esquemas disponibles, ejecuta:
+---
+
+## Pruebas unitarias y cobertura (100%)
+
+El proyecto utiliza **Vitest** con cobertura configurada al **100%** en statements, branches, functions y lines para los servicios y errores de la librería:
 
 ```bash
-ng generate --help
+# Ejecutar pruebas unitarias de la librería
+npm test
+
+# Ejecutar pruebas unitarias con reporte de cobertura (umbral 100%)
+npm run test:coverage
+
+# Ejecutar pruebas unitarias de la aplicación Showcase
+npm run test:showcase
 ```
 
-## Recursos adicionales
+---
 
-Para obtener más información sobre el uso de Angular CLI y su referencia detallada de comandos, visita la [documentación oficial de Angular CLI](https://angular.dev/tools/cli).
+## Documentación técnica con Compodoc
+
+Todos los servicios, métodos, parámetros, interfaces y modelos están documentados mediante JSDoc en español para su generación con **Compodoc**:
+
+```bash
+# Generar documentación estática en ./documentation
+npm run docs
+
+# Servir la documentación generada en el navegador
+npm run docs:serve
+```
+
+También puedes validar la cobertura documental al 100%:
+
+```bash
+npx compodoc -p tsconfig.doc.json --coverageTest 100 --coverageMinimumPerFile 100
+```
+
+---
+
+## Compilación y publicación en NPM
+
+1. Compila la librería en modo producción (los artefactos se generan en `dist/storage-manager`):
+
+```bash
+npm run build:lib
+```
+
+2. Verifica el contenido empaquetado antes de publicar:
+
+```bash
+cd dist/storage-manager
+npm pack --dry-run
+```
+
+3. Inicia sesión en NPM y publica el paquete `@andresdgm/storage-manager`:
+
+```bash
+npm login
+npm publish --access public
+```
+
+---
+
+## Ejecución de la aplicación Showcase
+
+Para ejecutar localmente la aplicación demostrativa después de compilar la librería:
+
+```bash
+npm run build:lib
+npm start
+```
+
+Luego abre `http://localhost:4200/` en tu navegador (en `localhost` tanto `LocalStorage` como `Cache Storage` se encuentran habilitados en contexto seguro).
+
+Si deseas consumir el paquete directamente desde el registro NPM en un proyecto externo o en el Showcase:
+
+```bash
+npm install @andresdgm/storage-manager
+```
+
+Consulta también la guía detallada de uso y API en [projects/storage-manager/README.md](projects/storage-manager/README.md).

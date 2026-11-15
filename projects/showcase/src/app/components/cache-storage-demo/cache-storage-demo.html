@@ -1,0 +1,242 @@
+<section id="cache-storage" class="section-block">
+  <div class="section-header">
+    <div class="section-title-row">
+      <span class="icon-box icon-box--pink" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="6" rx="1" />
+          <rect x="3" y="14" width="18" height="6" rx="1" />
+          <line x1="7" y1="7" x2="7.01" y2="7" />
+          <line x1="7" y1="17" x2="7.01" y2="17" />
+        </svg>
+      </span>
+      <div>
+        <span class="pill-tag">Paso 3 · Asíncrono &amp; HTTP Responses</span>
+        <h2 class="heading-underline" style="--underline-color: var(--color-hot-pink)">
+          CacheStorageService
+        </h2>
+      </div>
+    </div>
+    <p class="section-subtitle">
+      Administración de cachés y almacenamiento de respuestas HTTP mediante
+      <span class="highlight-marker">put, add, match, matchJson y deleteCache</span>.
+    </p>
+  </div>
+
+  @if (!cacheSupported()) {
+    <div class="card warning-card" role="status">
+      <strong>Cache Storage no disponible (`CACHE_UNAVAILABLE`):</strong>
+      La API <code>window.caches</code> requiere un contexto seguro (<code>https://</code> o
+      <code>http://localhost</code>) o no está implementada en este entorno.
+    </div>
+  }
+
+  <!-- Fila 1: Gestión de cachés -->
+  <div class="card panel-stack">
+    <div class="panel-heading">
+      <h3>Administración de cachés (keys / openCache / hasCache / deleteCache)</h3>
+      <span class="pill-tag">{{ cacheNames().length }} cachés</span>
+    </div>
+
+    <div class="cache-bar">
+      <input
+        type="text"
+        class="input-field"
+        name="cacheName"
+        aria-label="Nombre de la caché"
+        [ngModel]="cacheNameInput()"
+        (ngModelChange)="cacheNameInput.set($event)"
+        placeholder="ej. api-v1"
+      />
+      <button type="button" class="btn btn-cta" (click)="openOrCreateCache()">
+        Abrir / Crear (openCache) →
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="checkCacheExists()">
+        Verificar (hasCache)
+      </button>
+      <button type="button" class="btn btn-ghost" (click)="refreshCaches()">
+        Refrescar (keys)
+      </button>
+    </div>
+
+    @if (cacheNames().length === 0) {
+      <div class="card-mist empty-state">
+        No existen cachés registradas todavía. Crea una con <strong>Abrir / Crear</strong>.
+      </div>
+    } @else {
+      <div class="caches-pills">
+        @for (name of cacheNames(); track name) {
+          <div class="cache-chip-group">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              [class.pill-tag--selected]="activeCache() === name"
+              (click)="selectCache(name)"
+            >
+              {{ name }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger btn-sm"
+              [attr.aria-label]="'Eliminar caché ' + name"
+              (click)="removeCache(name)"
+            >
+              ×
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Fila 2: Recursos HTTP + Inspección -->
+  <div class="grid-2">
+    <div class="card panel-stack">
+      <div class="panel-heading">
+        <h3>Guardar recurso HTTP (put / add)</h3>
+        <span class="pill-tag pill-tag--selected">Activa: {{ activeCache() }}</span>
+      </div>
+
+      <div class="form-row">
+        <label class="field-group">
+          <span class="field-label">Ruta o URL (put)</span>
+          <input
+            type="text"
+            class="input-field"
+            name="cacheResourceUrl"
+            [ngModel]="resourceUrlInput()"
+            (ngModelChange)="resourceUrlInput.set($event)"
+            placeholder="/api/productos/1"
+          />
+        </label>
+
+        <label class="field-group">
+          <span class="field-label">Content-Type</span>
+          <select
+            class="select-field"
+            name="cacheContentType"
+            [ngModel]="responseContentType()"
+            (ngModelChange)="responseContentType.set($event)"
+          >
+            <option value="application/json">application/json</option>
+            <option value="text/plain">text/plain</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field-group">
+        <span class="field-label">Cuerpo de la respuesta (Response)</span>
+        <textarea
+          class="textarea-field"
+          name="cacheBody"
+          [ngModel]="responseBodyInput()"
+          (ngModelChange)="responseBodyInput.set($event)"
+        ></textarea>
+      </label>
+
+      <div class="actions-row">
+        <button type="button" class="btn btn-cta" (click)="putSimulatedResponse()">
+          Guardar Response (put) →
+        </button>
+      </div>
+
+      <div class="card-mist fetch-box">
+        <span class="field-label">Descarga directa desde red (add)</span>
+        <div class="query-bar">
+          <input
+            type="text"
+            class="input-field"
+            name="fetchUrl"
+            aria-label="URL a descargar"
+            [ngModel]="fetchUrlInput()"
+            (ngModelChange)="fetchUrlInput.set($event)"
+            placeholder="/demo-data.json"
+          />
+          <button type="button" class="btn btn-secondary" (click)="fetchAndAddResource()">
+            Descargar (add)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card panel-stack">
+      <div class="panel-heading">
+        <h3>Recursos en "{{ activeCache() }}" (listEntries)</h3>
+        <span class="pill-tag">{{ cacheEntries().length }} recursos</span>
+      </div>
+
+      @if (cacheEntries().length === 0) {
+        <div class="card-mist empty-state">
+          Esta caché no contiene recursos aún. Usa <code>put</code> o <code>add</code> para guardar
+          una respuesta.
+        </div>
+      } @else {
+        <ul class="entries-list">
+          @for (entry of cacheEntries(); track entry.url) {
+            <li class="entry-item">
+              <div class="entry-info">
+                <span class="pill-tag">{{ entry.method }}</span>
+                <code class="entry-url">{{ entry.url }}</code>
+              </div>
+              <div class="entry-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="inspectRawMatch(entry.url)"
+                >
+                  match
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="inspectJsonMatch(entry.url)"
+                >
+                  matchJson
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  (click)="removeResource(entry.url)"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="card-mist inspection-box">
+        <span class="field-label">Resultado de match / matchJson</span>
+        <p class="inspection-meta">{{ inspectedMeta() }}</p>
+        <div class="console-panel">
+          <pre>{{ inspectedOutput() ?? 'null' }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bitácora de operaciones Cache Storage -->
+  @if (logs().length > 0) {
+    <div class="card log-card">
+      <span class="field-label">Bitácora de operaciones (CacheStorageService)</span>
+      <ul class="log-list">
+        @for (entry of logs(); track entry.id) {
+          <li class="log-row">
+            <span class="log-time">{{ entry.timestamp }}</span>
+            <span
+              class="pill-tag"
+              [class.pill-tag--ok]="entry.status === 'ok'"
+              [class.pill-tag--error]="entry.status === 'error'"
+            >
+              {{ entry.operation }}
+            </span>
+            @if (entry.errorCode) {
+              <span class="pill-tag pill-tag--error">{{ entry.errorCode }}</span>
+            }
+            <span>{{ entry.message }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</section>
