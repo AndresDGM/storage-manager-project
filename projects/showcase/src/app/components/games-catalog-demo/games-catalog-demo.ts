@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { DestroyRef, Component, OnInit, computed, effect, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { CacheStorageService, LocalStorageService } from 'storage-manager';
+import { CacheStorageService, LocalStorageService } from '@andresdgm/storage-manager';
 import {
   CheapSharkDealDto,
   CheapSharkGameCard,

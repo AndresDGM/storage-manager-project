@@ -1,6 +1,6 @@
 import { DestroyRef, Component, OnInit, effect, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CacheStorageService } from 'storage-manager';
+import { CacheStorageService } from '@andresdgm/storage-manager';
 import { CacheEntrySnapshot, OperationLogEntry } from '../../models/showcase.models';
 import {
   createLogEntry,

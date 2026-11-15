@@ -1,4 +1,4 @@
-import { StorageError, StorageErrorCode } from 'storage-manager';
+import { StorageError, StorageErrorCode } from '@andresdgm/storage-manager';
 import { OperationLogEntry } from '../models/showcase.models';
 
 let logSequence = 0;

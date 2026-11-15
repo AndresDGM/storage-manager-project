@@ -1,5 +1,5 @@
 import { Component, signal, viewChild } from '@angular/core';
-import { StorageErrorCode } from 'storage-manager';
+import { StorageErrorCode } from '@andresdgm/storage-manager';
 import { CacheStorageDemoComponent } from './components/cache-storage-demo/cache-storage-demo';
 import { GamesCatalogDemoComponent } from './components/games-catalog-demo/games-catalog-demo';
 import { LocalStorageDemoComponent } from './components/local-storage-demo/local-storage-demo';

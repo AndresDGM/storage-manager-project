@@ -1,6 +1,6 @@
 import { DestroyRef, Component, OnInit, effect, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LocalStorageService, StorageEntry } from 'storage-manager';
+import { LocalStorageService, StorageEntry } from '@andresdgm/storage-manager';
 import {
   LocalStorageSnapshotItem,
   LocalStorageValueType,

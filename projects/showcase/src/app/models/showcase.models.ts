@@ -1,4 +1,4 @@
-import { StorageErrorCode } from 'storage-manager';
+import { StorageErrorCode } from '@andresdgm/storage-manager';
 
 /**
  * Tipos de datos soportados en el editor interactivo de LocalStorage.
