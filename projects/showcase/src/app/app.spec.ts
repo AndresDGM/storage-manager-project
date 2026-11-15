@@ -1,16 +1,21 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 
 describe('App (Showcase)', () => {
   beforeEach(async () => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
   });
 
   afterEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   it('debe crearse correctamente la aplicación Showcase', () => {
@@ -26,6 +31,7 @@ describe('App (Showcase)', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('Storage');
     expect(compiled.querySelector('#local-storage')).toBeTruthy();
     expect(compiled.querySelector('#cache-storage')).toBeTruthy();
+    expect(compiled.querySelector('#juegos-cheapshark')).toBeTruthy();
     expect(compiled.querySelector('#api-publica')).toBeTruthy();
   });
 });
