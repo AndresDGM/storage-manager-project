@@ -1,0 +1,7 @@
+{
+  "libreria": "storage-manager",
+  "version": "1.0.0",
+  "origen": "Recurso local servido para CacheStorageService.add()",
+  "servicios": ["LocalStorageService", "CacheStorageService"],
+  "estado": "activo"
+}

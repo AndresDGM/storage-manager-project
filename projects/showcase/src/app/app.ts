@@ -1,11 +1,54 @@
 import { Component, signal } from '@angular/core';
+import { StorageErrorCode } from 'storage-manager';
+import { CacheStorageDemoComponent } from './components/cache-storage-demo/cache-storage-demo';
+import { LocalStorageDemoComponent } from './components/local-storage-demo/local-storage-demo';
 
+/**
+ * Componente raíz de la aplicación Showcase que demuestra la API pública de `storage-manager`.
+ */
 @Component({
-  imports: [],
   selector: 'app-root',
-  styleUrl: './app.css',
+  imports: [LocalStorageDemoComponent, CacheStorageDemoComponent],
   templateUrl: './app.html',
+  styleUrl: './app.css',
 })
 export class App {
-  protected readonly title = signal('showcase');
+  protected readonly localStorageKeysCount = signal(0);
+  protected readonly cachesCount = signal(0);
+  protected readonly cacheApiAvailable = signal(true);
+
+  protected readonly errorCodes: ReadonlyArray<{ code: StorageErrorCode; description: string }> = [
+    {
+      code: StorageErrorCode.INVALID_KEY,
+      description: 'Clave de almacenamiento o nombre de caché vacío o compuesto solo por espacios.',
+    },
+    {
+      code: StorageErrorCode.KEY_NOT_FOUND,
+      description: 'Intento de actualizar (updateItem) una clave inexistente en LocalStorage.',
+    },
+    {
+      code: StorageErrorCode.QUOTA_EXCEEDED,
+      description: 'El navegador alcanzó el límite de almacenamiento permitido.',
+    },
+    {
+      code: StorageErrorCode.SERIALIZATION_ERROR,
+      description: 'Valor undefined o estructura no serializable (referencias circulares).',
+    },
+    {
+      code: StorageErrorCode.INVALID_JSON,
+      description: 'Contenido almacenado que no corresponde a JSON válido al ejecutar matchJson.',
+    },
+    {
+      code: StorageErrorCode.CACHE_UNAVAILABLE,
+      description: 'La API nativa window.caches no está expuesta en el entorno actual.',
+    },
+    {
+      code: StorageErrorCode.CACHE_NETWORK_ERROR,
+      description: 'Fallo de red o respuesta inválida al ejecutar CacheStorageService.add().',
+    },
+    {
+      code: StorageErrorCode.CACHE_OPERATION_ERROR,
+      description: 'Error general devuelto por la API nativa de Cache Storage.',
+    },
+  ];
 }
