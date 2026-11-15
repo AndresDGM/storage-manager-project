@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, output, signal } from '@angular/core';
+import { DestroyRef, Component, OnInit, effect, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LocalStorageService, StorageEntry } from 'storage-manager';
 import {
@@ -11,6 +11,17 @@ import {
   extractErrorDetails,
   formatDisplayValue,
 } from '../../utils/showcase-log.util';
+import { readSessionState, writeSessionState } from '../../utils/showcase-persistence.util';
+
+interface LocalStorageUiState {
+  keyInput: string;
+  valueType: LocalStorageValueType;
+  rawValueInput: string;
+  queryKeyInput: string;
+  logs: OperationLogEntry[];
+}
+
+const LOCAL_STORAGE_UI_STATE_KEY = 'showcase:local-storage-ui';
 
 /**
  * Componente demostrativo interactivo para todas las operaciones de `LocalStorageService`.
@@ -23,6 +34,7 @@ import {
 })
 export class LocalStorageDemoComponent implements OnInit {
   private readonly localStorageService = inject(LocalStorageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Emite la cantidad actual de claves almacenadas cada vez que cambia el estado. */
   public readonly keysCountChange = output<number>();
@@ -38,9 +50,23 @@ export class LocalStorageDemoComponent implements OnInit {
   protected readonly inspectionResult = signal<string | null>(null);
   protected readonly inspectionMeta = signal<string>('Sin consulta reciente.');
   protected readonly logs = signal<OperationLogEntry[]>([]);
+  private uiRestored = false;
+
+  constructor() {
+    effect(() => {
+      const snapshot = this.buildUiState();
+      if (this.uiRestored) {
+        writeSessionState<LocalStorageUiState>(LOCAL_STORAGE_UI_STATE_KEY, snapshot);
+      }
+    });
+  }
 
   public ngOnInit(): void {
+    this.restoreUiState();
+    this.uiRestored = true;
     this.refreshEntries();
+    this.syncInspectionFromStorage();
+    this.registerBrowserListeners();
   }
 
   /** Almacena un valor tipado usando `setItem`. */
@@ -59,6 +85,7 @@ export class LocalStorageDemoComponent implements OnInit {
         formatDisplayValue(parsedValue),
       );
       this.refreshEntries();
+      this.syncInspectionFromStorage();
     } catch (error: unknown) {
       this.recordCaughtError('setItem', error);
     }
@@ -79,6 +106,7 @@ export class LocalStorageDemoComponent implements OnInit {
         formatDisplayValue(parsedValue),
       );
       this.refreshEntries();
+      this.syncInspectionFromStorage();
     } catch (error: unknown) {
       this.recordCaughtError('updateItem', error);
     }
@@ -89,16 +117,8 @@ export class LocalStorageDemoComponent implements OnInit {
     const key = targetKey ?? this.queryKeyInput();
     this.queryKeyInput.set(key);
 
-    const exists = this.localStorageService.hasKey(key);
-    const value = this.localStorageService.getItem<unknown>(key);
-    const formatted = formatDisplayValue(value);
-
-    this.inspectionResult.set(formatted);
-    this.inspectionMeta.set(
-      exists
-        ? `hasKey("${key}") = true · Tipo detectado: ${this.detectValueType(value)}`
-        : `hasKey("${key}") = false · Clave no encontrada (retorna null)`,
-    );
+    const exists = this.syncInspectionFromStorage();
+    const formatted = this.inspectionResult() ?? 'null';
 
     this.recordLog(
       'getItem / hasKey',
@@ -117,6 +137,9 @@ export class LocalStorageDemoComponent implements OnInit {
       this.localStorageService.removeItem(targetKey);
       this.recordLog('removeItem', 'ok', `Clave "${targetKey}" eliminada.`);
       this.refreshEntries();
+      if (this.queryKeyInput() === targetKey) {
+        this.syncInspectionFromStorage();
+      }
     } catch (error: unknown) {
       this.recordCaughtError('removeItem', error);
     }
@@ -145,7 +168,9 @@ export class LocalStorageDemoComponent implements OnInit {
     if (preset === 'prefs') {
       this.keyInput.set('preferencias_ui');
       this.valueType.set('json');
-      this.rawValueInput.set('{\n  "tema": "bauhaus",\n  "idioma": "es-CO",\n  "itemsPorPagina": 12\n}');
+      this.rawValueInput.set(
+        '{\n  "tema": "bauhaus",\n  "idioma": "es-CO",\n  "itemsPorPagina": 12\n}',
+      );
       return;
     }
 
@@ -210,6 +235,74 @@ export class LocalStorageDemoComponent implements OnInit {
 
     this.entries.set(snapshot);
     this.keysCountChange.emit(snapshot.length);
+  }
+
+  private syncInspectionFromStorage(): boolean {
+    const key = this.queryKeyInput();
+    const exists = this.localStorageService.hasKey(key);
+    if (!exists) {
+      this.inspectionResult.set(null);
+      this.inspectionMeta.set(
+        key.trim()
+          ? `hasKey("${key}") = false · Clave no encontrada (retorna null)`
+          : 'Sin consulta reciente.',
+      );
+      return false;
+    }
+
+    const value = this.localStorageService.getItem<unknown>(key);
+    this.inspectionResult.set(formatDisplayValue(value));
+    this.inspectionMeta.set(
+      `hasKey("${key}") = true · Tipo detectado: ${this.detectValueType(value)}`,
+    );
+    return true;
+  }
+
+  private restoreUiState(): void {
+    const saved = readSessionState<LocalStorageUiState>(LOCAL_STORAGE_UI_STATE_KEY);
+    if (!saved) {
+      return;
+    }
+
+    this.keyInput.set(saved.keyInput);
+    this.valueType.set(saved.valueType);
+    this.rawValueInput.set(saved.rawValueInput);
+    this.queryKeyInput.set(saved.queryKeyInput);
+    this.logs.set(saved.logs ?? []);
+  }
+
+  private buildUiState(): LocalStorageUiState {
+    return {
+      keyInput: this.keyInput(),
+      valueType: this.valueType(),
+      rawValueInput: this.rawValueInput(),
+      queryKeyInput: this.queryKeyInput(),
+      logs: this.logs(),
+    };
+  }
+
+  private persistUiState(): void {
+    writeSessionState<LocalStorageUiState>(LOCAL_STORAGE_UI_STATE_KEY, this.buildUiState());
+  }
+
+  private registerBrowserListeners(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const onBeforeUnload = (): void => this.persistUiState();
+    const onStorageSync = (): void => {
+      this.refreshEntries();
+      this.syncInspectionFromStorage();
+    };
+
+    window.addEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('storage', onStorageSync);
+
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      window.removeEventListener('storage', onStorageSync);
+    });
   }
 
   private parseInputValue(): unknown {

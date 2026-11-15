@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, output, signal } from '@angular/core';
+import { DestroyRef, Component, OnInit, effect, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CacheStorageService } from 'storage-manager';
 import { CacheEntrySnapshot, OperationLogEntry } from '../../models/showcase.models';
@@ -7,6 +7,22 @@ import {
   extractErrorDetails,
   formatDisplayValue,
 } from '../../utils/showcase-log.util';
+import { readSessionState, writeSessionState } from '../../utils/showcase-persistence.util';
+
+interface CacheStorageUiState {
+  cacheNameInput: string;
+  activeCache: string;
+  resourceUrlInput: string;
+  responseStatusInput: number;
+  responseContentType: 'application/json' | 'text/plain';
+  responseBodyInput: string;
+  fetchUrlInput: string;
+  lastInspectedUrl: string | null;
+  lastInspectionMode: 'match' | 'matchJson' | null;
+  logs: OperationLogEntry[];
+}
+
+const CACHE_STORAGE_UI_STATE_KEY = 'showcase:cache-storage-ui';
 
 /**
  * Componente demostrativo interactivo para todas las operaciones de `CacheStorageService`.
@@ -19,6 +35,7 @@ import {
 })
 export class CacheStorageDemoComponent implements OnInit {
   private readonly cacheStorageService = inject(CacheStorageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Emite la cantidad de cachés registradas. */
   public readonly cachesCountChange = output<number>();
@@ -43,11 +60,27 @@ export class CacheStorageDemoComponent implements OnInit {
   protected readonly cacheEntries = signal<CacheEntrySnapshot[]>([]);
   protected readonly inspectedOutput = signal<string | null>(null);
   protected readonly inspectedMeta = signal<string>('Sin consulta reciente.');
+  protected readonly lastInspectedUrl = signal<string | null>(null);
+  protected readonly lastInspectionMode = signal<'match' | 'matchJson' | null>(null);
   protected readonly cacheSupported = signal<boolean>(true);
   protected readonly logs = signal<OperationLogEntry[]>([]);
+  private uiRestored = false;
+
+  constructor() {
+    effect(() => {
+      const snapshot = this.buildUiState();
+      if (this.uiRestored) {
+        writeSessionState<CacheStorageUiState>(CACHE_STORAGE_UI_STATE_KEY, snapshot);
+      }
+    });
+  }
 
   public async ngOnInit(): Promise<void> {
+    this.restoreUiState();
+    this.uiRestored = true;
+    this.registerBeforeUnload();
     await this.refreshCaches();
+    await this.restoreInspectedEntry();
   }
 
   /** Abre o crea una caché mediante `openCache`. */
@@ -83,6 +116,10 @@ export class CacheStorageDemoComponent implements OnInit {
   public async selectCache(cacheName: string): Promise<void> {
     this.cacheNameInput.set(cacheName);
     this.activeCache.set(cacheName);
+    this.lastInspectedUrl.set(null);
+    this.lastInspectionMode.set(null);
+    this.inspectedOutput.set(null);
+    this.inspectedMeta.set('Sin consulta reciente.');
     await this.loadCacheEntries(cacheName);
   }
 
@@ -99,6 +136,10 @@ export class CacheStorageDemoComponent implements OnInit {
       );
       if (this.activeCache() === cacheName) {
         this.cacheEntries.set([]);
+        this.lastInspectedUrl.set(null);
+        this.lastInspectionMode.set(null);
+        this.inspectedOutput.set(null);
+        this.inspectedMeta.set('Caché eliminada.');
       }
       await this.refreshCaches();
     } catch (error: unknown) {
@@ -156,14 +197,19 @@ export class CacheStorageDemoComponent implements OnInit {
   }
 
   /** Consulta una respuesta HTTP sin parsear usando `match`. */
-  public async inspectRawMatch(url: string): Promise<void> {
+  public async inspectRawMatch(url: string, logOperation = true): Promise<void> {
     const cacheName = this.activeCache();
+    this.lastInspectedUrl.set(url);
+    this.lastInspectionMode.set('match');
+
     try {
       const response = await this.cacheStorageService.match(cacheName, url);
       if (!response) {
         this.inspectedMeta.set(`match("${url}") -> null`);
         this.inspectedOutput.set('null');
-        this.recordLog('match', 'ok', `El recurso "${url}" no se encontró en "${cacheName}".`);
+        if (logOperation) {
+          this.recordLog('match', 'ok', `El recurso "${url}" no se encontró en "${cacheName}".`);
+        }
         return;
       }
 
@@ -173,27 +219,36 @@ export class CacheStorageDemoComponent implements OnInit {
         `match("${url}") · HTTP ${response.status} · Content-Type: ${contentType}`,
       );
       this.inspectedOutput.set(bodyText);
-      this.recordLog('match', 'ok', `Respuesta HTTP recuperada para "${url}".`);
+      if (logOperation) {
+        this.recordLog('match', 'ok', `Respuesta HTTP recuperada para "${url}".`);
+      }
     } catch (error: unknown) {
       this.recordCaughtError('match', error);
     }
   }
 
   /** Consulta y deserializa una respuesta como JSON usando `matchJson`. */
-  public async inspectJsonMatch(url: string): Promise<void> {
+  public async inspectJsonMatch(url: string, logOperation = true): Promise<void> {
     const cacheName = this.activeCache();
+    this.lastInspectedUrl.set(url);
+    this.lastInspectionMode.set('matchJson');
+
     try {
       const json = await this.cacheStorageService.matchJson<unknown>(cacheName, url);
       if (json === null) {
         this.inspectedMeta.set(`matchJson("${url}") -> null`);
         this.inspectedOutput.set('null');
-        this.recordLog('matchJson', 'ok', `El recurso "${url}" no existe en "${cacheName}".`);
+        if (logOperation) {
+          this.recordLog('matchJson', 'ok', `El recurso "${url}" no existe en "${cacheName}".`);
+        }
         return;
       }
 
       this.inspectedMeta.set(`matchJson("${url}") · JSON tipado deserializado`);
       this.inspectedOutput.set(formatDisplayValue(json));
-      this.recordLog('matchJson', 'ok', `JSON deserializado correctamente desde "${url}".`);
+      if (logOperation) {
+        this.recordLog('matchJson', 'ok', `JSON deserializado correctamente desde "${url}".`);
+      }
     } catch (error: unknown) {
       this.inspectedMeta.set(`matchJson("${url}") falló con StorageError`);
       this.recordCaughtError('matchJson', error);
@@ -212,6 +267,12 @@ export class CacheStorageDemoComponent implements OnInit {
           ? `Recurso "${url}" eliminado de "${cacheName}".`
           : `El recurso "${url}" no existía en "${cacheName}".`,
       );
+      if (this.lastInspectedUrl() === url) {
+        this.lastInspectedUrl.set(null);
+        this.lastInspectionMode.set(null);
+        this.inspectedOutput.set(null);
+        this.inspectedMeta.set('Recurso eliminado.');
+      }
       await this.loadCacheEntries(cacheName);
     } catch (error: unknown) {
       this.recordCaughtError('deleteResource', error);
@@ -257,6 +318,70 @@ export class CacheStorageDemoComponent implements OnInit {
     } catch (error: unknown) {
       this.recordCaughtError('listEntries', error);
     }
+  }
+
+  private async restoreInspectedEntry(): Promise<void> {
+    const url = this.lastInspectedUrl();
+    const mode = this.lastInspectionMode();
+    if (!url || !mode || !this.cacheNames().includes(this.activeCache())) {
+      return;
+    }
+
+    if (mode === 'matchJson') {
+      await this.inspectJsonMatch(url, false);
+      return;
+    }
+
+    await this.inspectRawMatch(url, false);
+  }
+
+  private restoreUiState(): void {
+    const saved = readSessionState<CacheStorageUiState>(CACHE_STORAGE_UI_STATE_KEY);
+    if (!saved) {
+      return;
+    }
+
+    this.cacheNameInput.set(saved.cacheNameInput);
+    this.activeCache.set(saved.activeCache);
+    this.resourceUrlInput.set(saved.resourceUrlInput);
+    this.responseStatusInput.set(saved.responseStatusInput);
+    this.responseContentType.set(saved.responseContentType);
+    this.responseBodyInput.set(saved.responseBodyInput);
+    this.fetchUrlInput.set(saved.fetchUrlInput);
+    this.lastInspectedUrl.set(saved.lastInspectedUrl);
+    this.lastInspectionMode.set(saved.lastInspectionMode);
+    this.logs.set(saved.logs ?? []);
+  }
+
+  private buildUiState(): CacheStorageUiState {
+    return {
+      cacheNameInput: this.cacheNameInput(),
+      activeCache: this.activeCache(),
+      resourceUrlInput: this.resourceUrlInput(),
+      responseStatusInput: this.responseStatusInput(),
+      responseContentType: this.responseContentType(),
+      responseBodyInput: this.responseBodyInput(),
+      fetchUrlInput: this.fetchUrlInput(),
+      lastInspectedUrl: this.lastInspectedUrl(),
+      lastInspectionMode: this.lastInspectionMode(),
+      logs: this.logs(),
+    };
+  }
+
+  private persistUiState(): void {
+    writeSessionState<CacheStorageUiState>(CACHE_STORAGE_UI_STATE_KEY, this.buildUiState());
+  }
+
+  private registerBeforeUnload(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const onBeforeUnload = (): void => this.persistUiState();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    });
   }
 
   private recordCaughtError(operation: string, error: unknown): void {
